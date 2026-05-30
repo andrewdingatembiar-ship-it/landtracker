@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,6 +34,31 @@
   --radius-sm:6px;
 }
 body{font-family:'Mulish',sans-serif;background:var(--cream);color:var(--earth);min-height:100vh;font-size:14px;line-height:1.6}
+
+/* LOGIN SCREEN */
+.login-screen{position:fixed;inset:0;z-index:999;background:var(--earth);display:flex;align-items:center;justify-content:center;padding:1rem}
+.login-box{background:var(--paper);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:380px;max-width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.4);animation:popIn 0.3s ease}
+.login-logo{text-align:center;margin-bottom:1.75rem}
+.login-logo .brand-icon{width:52px;height:52px;background:var(--green);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px}
+.login-logo .brand-name{font-family:'Playfair Display',serif;font-size:26px;color:var(--earth)}
+.login-logo .brand-tagline{font-size:12px;color:var(--clay);margin-top:3px}
+.login-label{font-size:12px;font-weight:600;color:var(--clay);letter-spacing:0.03em;display:block;margin-bottom:5px}
+.login-input{width:100%;padding:0.65rem 0.875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:'Mulish',sans-serif;font-size:14px;background:var(--cream);color:var(--earth);transition:all 0.15s;margin-bottom:1rem}
+.login-input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
+.login-btn{width:100%;padding:0.7rem;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Mulish',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.15s;letter-spacing:0.02em}
+.login-btn:hover{background:#235c42}
+.login-error{background:var(--red-bg);border:1px solid #f3b8b8;color:var(--red);border-radius:var(--radius-sm);padding:0.6rem 0.875rem;font-size:13px;font-weight:500;margin-bottom:1rem;display:none}
+.login-footer{text-align:center;font-size:11px;color:var(--sand);margin-top:1.25rem}
+.login-attempts{text-align:center;font-size:12px;color:var(--clay);margin-top:0.5rem}
+
+/* ADMIN BADGE */
+.admin-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;background:var(--green-bg);color:var(--green);font-weight:700;margin-left:8px}
+.logout-btn{display:flex;align-items:center;gap:6px;padding:0.4rem 0.75rem;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.6);font-family:'Mulish',sans-serif;font-size:12px;cursor:pointer;transition:all 0.15s;margin-left:auto}
+.logout-btn:hover{background:rgba(255,255,255,0.08);color:#fff}
+
+/* LOCK OVERLAY for non-admin */
+.locked-tip{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--sand);padding:4px 10px;border-radius:20px;background:rgba(74,44,20,0.06);border:1px dashed var(--border)}
+
 
 /* LAYOUT */
 .app{display:flex;min-height:100vh}
@@ -235,9 +259,28 @@ tbody td{padding:0.85rem 1rem;vertical-align:middle}
 </style>
 </head>
 <body>
-<div class="app">
 
-<!-- SIDEBAR -->
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="brand-icon">🌿</div>
+      <div class="brand-name">LandTrack</div>
+      <div class="brand-tagline">Admin Access — Property Registry</div>
+    </div>
+    <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+    <label class="login-label" for="loginUser">Username</label>
+    <input class="login-input" type="text" id="loginUser" placeholder="Enter your username" autocomplete="username"/>
+    <label class="login-label" for="loginPass">Password</label>
+    <input class="login-input" type="password" id="loginPass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">🔓 Sign In to Dashboard</button>
+    <div class="login-attempts" id="loginAttempts"></div>
+    <div class="login-footer">🔒 Secured — Authorised personnel only</div>
+  </div>
+</div>
+
+<div id="appWrapper" style="display:none">
+
 <aside class="sidebar">
   <div class="sidebar-brand">
     <div class="brand-icon">🌿</div>
@@ -260,8 +303,9 @@ tbody td{padding:0.85rem 1rem;vertical-align:middle}
   <a class="nav-item" href="#"><span class="icon">📊</span> Reports</a>
   <a class="nav-item" href="#"><span class="icon">⚙️</span> Settings</a>
   <div class="sidebar-footer">
-    <div class="u-avatar">JD</div>
-    <div style="flex:1"><div class="u-name">John Doe</div><div class="u-role">Registry Officer</div></div>
+    <div class="u-avatar" id="sidebarAvatar">?</div>
+    <div style="flex:1"><div class="u-name" id="sidebarName">—</div><div class="u-role">Admin</div></div>
+    <button class="logout-btn" onclick="doLogout()" title="Sign out">⏏</button>
   </div>
 </aside>
 
@@ -274,7 +318,8 @@ tbody td{padding:0.85rem 1rem;vertical-align:middle}
         <span class="search-icon">🔍</span>
         <input type="text" id="globalSearch" placeholder="Search parcel, owner, address…" oninput="liveSearch(this.value)"/>
       </div>
-      <button class="btn btn-green" onclick="openAddModal()">+ Add Property</button>
+      <span class="admin-badge" id="adminBadge">🔓 Admin</span>
+      <button class="btn btn-green" id="addPropBtn" onclick="openAddModal()">+ Add Property</button>
     </div>
   </header>
 
@@ -793,6 +838,89 @@ function refreshAll(){
 
 /* ===== INIT ===== */
 refreshAll();
+</script>
+
+</div><!-- end #appWrapper -->
+
+<!-- AUTH SCRIPT -->
+<script>
+/* ===== CREDENTIALS — change these to your own ===== */
+const ADMIN_USERS = {
+  'admin':    'landtrack2026',
+  'Andrew':     'Diingatem123@',
+};
+/* =================================================== */
+
+const SESSION_KEY = 'lt_auth';
+let loginAttempts = 0;
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+function doLogin(){
+  const user = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  const attEl = document.getElementById('loginAttempts');
+
+  // Check lockout
+  const lockUntil = parseInt(sessionStorage.getItem('lt_lock')||'0');
+  if(Date.now() < lockUntil){
+    const secs = Math.ceil((lockUntil - Date.now())/1000);
+    errEl.textContent = `Too many attempts. Try again in ${secs}s.`;
+    errEl.style.display='block'; return;
+  }
+
+  if(ADMIN_USERS[user] && ADMIN_USERS[user] === pass){
+    // Success
+    loginAttempts = 0;
+    sessionStorage.removeItem('lt_lock');
+    sessionStorage.setItem(SESSION_KEY, user);
+    errEl.style.display='none';
+    attEl.textContent='';
+    showApp(user);
+  } else {
+    loginAttempts++;
+    if(loginAttempts >= MAX_ATTEMPTS){
+      sessionStorage.setItem('lt_lock', Date.now() + LOCKOUT_MS);
+      errEl.textContent = 'Too many failed attempts. Locked for 5 minutes.';
+    } else {
+      errEl.textContent = 'Incorrect username or password. Please try again.';
+      attEl.textContent = `Attempt ${loginAttempts} of ${MAX_ATTEMPTS}`;
+    }
+    errEl.style.display='block';
+    document.getElementById('loginPass').value='';
+    document.getElementById('loginPass').focus();
+  }
+}
+
+function showApp(username){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appWrapper').style.display='flex';
+  document.getElementById('appWrapper').style.flexDirection='row';
+  // Set sidebar user info
+  const initials = username.slice(0,2).toUpperCase();
+  document.getElementById('sidebarAvatar').textContent = initials;
+  document.getElementById('sidebarName').textContent = username.charAt(0).toUpperCase()+username.slice(1);
+}
+
+function doLogout(){
+  if(!confirm('Sign out of LandTrack?')) return;
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('appWrapper').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').style.display='none';
+  document.getElementById('loginAttempts').textContent='';
+}
+
+// Auto-login if session exists
+(function(){
+  const saved = sessionStorage.getItem(SESSION_KEY);
+  if(saved && ADMIN_USERS[saved]){
+    showApp(saved);
+  }
+})();
 </script>
 </body>
 </html>
