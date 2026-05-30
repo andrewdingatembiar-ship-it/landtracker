@@ -1,0 +1,798 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LandTrack — Property Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Mulish:wght@300;400;500;600&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --earth:#2c1a0e;
+  --soil:#4a2c14;
+  --clay:#7a4a28;
+  --sand:#c8a87a;
+  --cream:#f5efe4;
+  --paper:#faf7f2;
+  --white:#ffffff;
+  --green:#2d6a4f;
+  --green-light:#52b788;
+  --green-bg:#d8f3dc;
+  --amber:#b5631a;
+  --amber-bg:#fdf0e0;
+  --red:#8b2020;
+  --red-bg:#fce8e8;
+  --blue:#1a4b8c;
+  --blue-bg:#e8eef8;
+  --border:rgba(74,44,20,0.12);
+  --shadow:0 2px 8px rgba(44,26,14,0.10),0 8px 32px rgba(44,26,14,0.07);
+  --shadow-sm:0 1px 3px rgba(44,26,14,0.10);
+  --radius:10px;
+  --radius-lg:16px;
+  --radius-sm:6px;
+}
+body{font-family:'Mulish',sans-serif;background:var(--cream);color:var(--earth);min-height:100vh;font-size:14px;line-height:1.6}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--earth);color:#e8ddd0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
+.sidebar-brand{padding:1.75rem 1.5rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08)}
+.brand-icon{width:40px;height:40px;background:var(--green);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+.brand-name{font-family:'Playfair Display',serif;font-size:22px;color:#fff;line-height:1}
+.brand-tagline{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;letter-spacing:0.04em}
+.sidebar-stats{padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.s-stat{background:rgba(255,255,255,0.05);border-radius:var(--radius-sm);padding:8px 10px}
+.s-stat-val{font-size:16px;font-weight:600;color:#fff}
+.s-stat-lbl{font-size:10px;color:rgba(255,255,255,0.35);margin-top:1px}
+.nav-section{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:1.25rem 1.5rem 0.4rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:0.6rem 1.5rem;font-size:13px;color:rgba(255,255,255,0.55);cursor:pointer;transition:all 0.15s;border-left:3px solid transparent;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.9)}
+.nav-item.active{background:rgba(255,255,255,0.09);color:#fff;border-left-color:var(--green-light)}
+.nav-item .icon{font-size:17px;width:20px;text-align:center}
+.nav-badge{margin-left:auto;font-size:10px;padding:2px 6px;background:var(--red);color:#fff;border-radius:20px;font-weight:600}
+.sidebar-footer{margin-top:auto;padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px}
+.u-avatar{width:32px;height:32px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.u-name{font-size:13px;font-weight:500;color:rgba(255,255,255,0.8)}
+.u-role{font-size:11px;color:rgba(255,255,255,0.3)}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--paper);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm)}
+.page-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--earth)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-wrap input{padding:0.5rem 0.75rem 0.5rem 2.25rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--cream);font-family:'Mulish',sans-serif;font-size:13px;color:var(--earth);width:280px;transition:all 0.15s}
+.search-wrap input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
+.search-icon{position:absolute;left:10px;font-size:15px;color:var(--sand);pointer-events:none}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:0.5rem 1rem;border-radius:var(--radius-sm);font-family:'Mulish',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;border:1.5px solid var(--border);background:var(--paper);color:var(--earth)}
+.btn:hover{background:var(--cream)}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-green:hover{background:#235c42}
+.btn-sm{padding:0.35rem 0.75rem;font-size:12px}
+
+/* CONTENT */
+.content{padding:1.75rem 2rem;flex:1}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:1.75rem}
+.metric{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:1.125rem 1.25rem;box-shadow:var(--shadow-sm);transition:box-shadow 0.15s,transform 0.15s;animation:rise 0.4s ease both}
+.metric:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.metric:nth-child(1){animation-delay:0.05s}
+.metric:nth-child(2){animation-delay:0.1s}
+.metric:nth-child(3){animation-delay:0.15s}
+.metric:nth-child(4){animation-delay:0.2s}
+.metric:nth-child(5){animation-delay:0.25s}
+.metric-icon{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px}
+.ic-green{background:var(--green-bg);color:var(--green)}
+.ic-amber{background:var(--amber-bg);color:var(--amber)}
+.ic-blue{background:var(--blue-bg);color:var(--blue)}
+.ic-red{background:var(--red-bg);color:var(--red)}
+.metric-val{font-size:24px;font-weight:700;color:var(--earth);line-height:1}
+.metric-lbl{font-size:12px;color:var(--clay);margin-top:4px}
+.metric-delta{font-size:11px;margin-top:5px;font-weight:500}
+.delta-up{color:var(--green)}
+.delta-dn{color:var(--red)}
+.delta-neu{color:var(--sand)}
+
+/* SECTION TITLE */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--earth)}
+
+/* CARD */
+.card{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;animation:rise 0.4s ease both;animation-delay:0.15s}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:var(--paper)}
+.card-title{font-size:14px;font-weight:600;color:var(--earth);display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:16px;color:var(--green)}
+
+/* FILTERS */
+.filter-bar{display:flex;align-items:center;gap:6px;padding:0.75rem 1.25rem;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.ftab{font-size:12px;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--clay);cursor:pointer;font-family:'Mulish',sans-serif;font-weight:500;transition:all 0.15s}
+.ftab:hover{border-color:var(--green);color:var(--green)}
+.ftab.active{background:var(--green);color:#fff;border-color:var(--green)}
+.filter-right{margin-left:auto;display:flex;gap:6px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--sand);padding:0.75rem 1rem 0.6rem;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;background:var(--cream)}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f0ebe2}
+tbody td{padding:0.85rem 1rem;vertical-align:middle}
+.mono{font-family:'Fira Mono',monospace;font-size:11px;color:var(--clay)}
+.fw{font-weight:600}
+.price{font-family:'Playfair Display',serif;font-size:15px;color:var(--earth);font-weight:600}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge-clear{background:var(--green-bg);color:var(--green)}
+.badge-lien{background:var(--amber-bg);color:var(--amber)}
+.badge-dispute{background:var(--red-bg);color:var(--red)}
+.badge-pending{background:var(--blue-bg);color:var(--blue)}
+
+/* LAND SIZE PILL */
+.size-pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(74,44,20,0.08);color:var(--soil)}
+
+/* TABLE FOOTER */
+.tbl-foot{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;border-top:1px solid var(--border);font-size:12px;color:var(--clay)}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:1000px){.two-col,.three-col{grid-template-columns:1fr}}
+@media(max-width:780px){.sidebar{width:0;overflow:hidden}.main{margin-left:0}}
+
+/* ACTIVITY */
+.activity-list{display:flex;flex-direction:column}
+.act-item{display:flex;align-items:flex-start;gap:10px;padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);transition:background 0.1s}
+.act-item:last-child{border-bottom:none}
+.act-item:hover{background:var(--cream)}
+.act-dot{width:9px;height:9px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.d-sale{background:var(--green)}
+.d-transfer{background:var(--blue)}
+.d-lien{background:var(--amber)}
+.d-dispute{background:var(--red)}
+.act-main{font-size:13px;font-weight:500;color:var(--earth)}
+.act-meta{font-size:11px;color:var(--sand);margin-top:2px}
+
+/* OWNERSHIP CHAIN */
+.chain-list{display:flex;flex-direction:column}
+.chain-item{display:flex;align-items:center;gap:12px;padding:0.875rem 1.25rem;border-bottom:1px solid var(--border)}
+.chain-item:last-child{border-bottom:none}
+.chain-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.chain-name{font-size:13px;font-weight:600;color:var(--earth)}
+.chain-sub{font-size:11px;color:var(--sand);margin-top:1px}
+.chain-price{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--earth)}
+.chain-now{font-size:11px;color:var(--green);font-weight:600;margin-top:2px}
+
+/* ALERTS */
+.alerts-list{display:flex;flex-direction:column;gap:10px;padding:1.25rem}
+.alert{display:flex;gap:10px;padding:0.75rem 1rem;border-radius:var(--radius);font-size:13px}
+.alert-danger{background:var(--red-bg);border:1px solid #f3b8b8}
+.alert-warn{background:var(--amber-bg);border:1px solid #f5c88a}
+.alert-info{background:var(--blue-bg);border:1px solid #b5d0f0}
+.alert-success{background:var(--green-bg);border:1px solid #a8ddc0}
+.alert-icon{font-size:17px;margin-top:1px;flex-shrink:0}
+.alert-danger .alert-icon{color:var(--red)}
+.alert-warn .alert-icon{color:var(--amber)}
+.alert-info .alert-icon{color:var(--blue)}
+.alert-success .alert-icon{color:var(--green)}
+.alert-t{font-weight:600;margin-bottom:2px}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(44,26,14,0.6);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:var(--paper);border-radius:var(--radius-lg);width:580px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(44,26,14,0.3);animation:popIn 0.25s ease}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border)}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--earth)}
+.close-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--cream);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--clay);transition:background 0.15s}
+.close-btn:hover{background:var(--red-bg);color:var(--red)}
+.modal-body{padding:1.5rem}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.frow.one{grid-template-columns:1fr}
+.frow.three{grid-template-columns:1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;font-weight:600;color:var(--clay);letter-spacing:0.02em}
+.field input,.field select,.field textarea{padding:0.55rem 0.875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:'Mulish',sans-serif;font-size:13px;background:var(--cream);color:var(--earth);transition:all 0.15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(45,106,79,0.12)}
+.field textarea{resize:vertical;min-height:72px}
+.modal-foot{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* DETAIL PANEL */
+.detail-panel{position:fixed;right:-420px;top:0;bottom:0;width:420px;background:var(--paper);border-left:1px solid var(--border);z-index:150;box-shadow:-8px 0 32px rgba(44,26,14,0.15);transition:right 0.3s ease;overflow-y:auto;display:flex;flex-direction:column}
+.detail-panel.open{right:0}
+.dp-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between}
+.dp-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--earth)}
+.dp-sub{font-size:12px;color:var(--clay);margin-top:3px}
+.dp-body{padding:1.5rem;flex:1}
+.dp-section{margin-bottom:1.25rem}
+.dp-section-title{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--sand);margin-bottom:8px}
+.dp-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(74,44,20,0.07);font-size:13px}
+.dp-row:last-child{border-bottom:none}
+.dp-key{color:var(--clay)}
+.dp-val{font-weight:500;color:var(--earth);text-align:right;max-width:60%}
+.dp-chain-mini{display:flex;flex-direction:column;gap:0}
+.dc-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(74,44,20,0.07);font-size:12px}
+.dc-item:last-child{border-bottom:none}
+.dc-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.dc-name{flex:1;font-weight:500}
+.dc-dates{color:var(--sand)}
+
+/* SEARCH HIGHLIGHT */
+.hl{background:#ffe08a;border-radius:2px;padding:0 1px}
+
+/* ANIMATIONS */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🌿</div>
+    <div class="brand-name">LandTrack</div>
+    <div class="brand-tagline">Property Registry System</div>
+  </div>
+  <div class="sidebar-stats">
+    <div class="s-stat"><div class="s-stat-val" id="sb-total">0</div><div class="s-stat-lbl">Total parcels</div></div>
+    <div class="s-stat"><div class="s-stat-val" id="sb-acres">0</div><div class="s-stat-lbl">Total acres</div></div>
+  </div>
+  <div class="nav-section">Menu</div>
+  <a class="nav-item active" href="#"><span class="icon">🏠</span> Dashboard</a>
+  <a class="nav-item" href="#" onclick="showSection('registry')"><span class="icon">📋</span> Land Registry</a>
+  <a class="nav-item" href="#" onclick="showSection('sales')"><span class="icon">💰</span> Sales & Transfers</a>
+  <a class="nav-item" href="#" onclick="showSection('ownership')"><span class="icon">👤</span> Ownership</a>
+  <div class="nav-section">Legal</div>
+  <a class="nav-item" href="#"><span class="icon">⚖️</span> Disputes <span class="nav-badge" id="sb-disputes">0</span></a>
+  <a class="nav-item" href="#"><span class="icon">🔗</span> Liens <span class="nav-badge" id="sb-liens">0</span></a>
+  <div class="nav-section">Tools</div>
+  <a class="nav-item" href="#"><span class="icon">📊</span> Reports</a>
+  <a class="nav-item" href="#"><span class="icon">⚙️</span> Settings</a>
+  <div class="sidebar-footer">
+    <div class="u-avatar">JD</div>
+    <div style="flex:1"><div class="u-name">John Doe</div><div class="u-role">Registry Officer</div></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="page-title">Land Registry Dashboard</div>
+    <div class="topbar-right">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="globalSearch" placeholder="Search parcel, owner, address…" oninput="liveSearch(this.value)"/>
+      </div>
+      <button class="btn btn-green" onclick="openAddModal()">+ Add Property</button>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- METRICS -->
+    <div class="metrics" id="metricsRow"></div>
+
+    <!-- REGISTRY TABLE -->
+    <div class="section-head">
+      <div class="section-title">📋 Property Registry</div>
+      <button class="btn btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="filter-bar">
+        <button class="ftab active" onclick="filterTable('all',this)">All</button>
+        <button class="ftab" onclick="filterTable('clear',this)">Clear Title</button>
+        <button class="ftab" onclick="filterTable('lien',this)">Lien</button>
+        <button class="ftab" onclick="filterTable('dispute',this)">Dispute</button>
+        <button class="ftab" onclick="filterTable('pending',this)">Pending</button>
+        <div class="filter-right">
+          <select id="sizeFilter" onchange="applyFilters()" style="font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:20px;background:var(--cream);font-family:'Mulish',sans-serif;color:var(--earth)">
+            <option value="">All sizes</option>
+            <option value="small">Under 1 acre</option>
+            <option value="medium">1–5 acres</option>
+            <option value="large">5–20 acres</option>
+            <option value="xlarge">20+ acres</option>
+          </select>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Parcel ID</th>
+              <th>Address / Location</th>
+              <th>Current Owner</th>
+              <th>Land Size</th>
+              <th>Land Type</th>
+              <th>Status</th>
+              <th>Last Sale Price</th>
+              <th>Sale Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="mainTableBody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot">
+        <span id="tableInfo">Loading…</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" id="prevBtn" onclick="prevPage()">← Prev</button>
+          <span id="pageInfo" style="line-height:30px;font-size:12px;color:var(--clay)"></span>
+          <button class="btn btn-sm" id="nextBtn" onclick="nextPage()">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY + ALERTS -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><span class="icon">📡</span> Recent Activity</div>
+          <span style="font-size:11px;color:var(--sand)">Live feed</span>
+        </div>
+        <div class="activity-list" id="activityList"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><span class="icon">🔔</span> Alerts & Flags</div>
+          <span id="alertCount" style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--red-bg);color:var(--red);font-weight:700"></span>
+        </div>
+        <div class="alerts-list" id="alertsList"></div>
+      </div>
+    </div>
+
+    <!-- OWNERSHIP CHAIN + TOP SALES -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><span class="icon">🔗</span> Ownership Chain</div>
+          <select id="chainSelect" onchange="renderChain(this.value)" style="font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--cream);font-family:'Mulish',sans-serif;color:var(--earth)"></select>
+        </div>
+        <div class="chain-list" id="ownershipChain"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><span class="icon">🏆</span> Top Sales by Value</div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Parcel</th><th>Owner</th><th>Size</th><th>Price</th></tr></thead>
+            <tbody id="topSalesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detailPanel">
+  <div class="dp-head">
+    <div>
+      <div class="dp-title" id="dpTitle">—</div>
+      <div class="dp-sub" id="dpSub">—</div>
+    </div>
+    <div class="close-btn" onclick="closeDetail()">✕</div>
+  </div>
+  <div class="dp-body" id="dpBody"></div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">Register New Property</div>
+      <div class="close-btn" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="frow">
+        <div class="field"><label>Parcel ID *</label><input type="text" id="f-id" placeholder="e.g. US-TX-0041"/></div>
+        <div class="field"><label>Survey / Lot Number</label><input type="text" id="f-survey" placeholder="e.g. Block 7, Lot 12"/></div>
+      </div>
+      <div class="frow one">
+        <div class="field"><label>Property Address / Location *</label><input type="text" id="f-addr" placeholder="Street address or GPS coordinates"/></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Current Owner *</label><input type="text" id="f-owner" placeholder="Full legal name"/></div>
+        <div class="field"><label>Owner ID / SSN Ref.</label><input type="text" id="f-ownerid" placeholder="Optional identifier"/></div>
+      </div>
+      <div class="frow three">
+        <div class="field">
+          <label>Land Size *</label>
+          <input type="number" id="f-size" placeholder="e.g. 2.5" min="0" step="0.01"/>
+        </div>
+        <div class="field">
+          <label>Unit</label>
+          <select id="f-unit">
+            <option value="acres">Acres</option>
+            <option value="sq ft">Sq Ft</option>
+            <option value="hectares">Hectares</option>
+            <option value="sq m">Sq Meters</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Land Type</label>
+          <select id="f-type">
+            <option>Residential</option>
+            <option>Commercial</option>
+            <option>Agricultural</option>
+            <option>Industrial</option>
+            <option>Mixed-use</option>
+            <option>Vacant</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Sale Price (USD $) *</label><input type="number" id="f-price" placeholder="e.g. 250000" min="0"/></div>
+        <div class="field"><label>Sale Date</label><input type="date" id="f-date"/></div>
+      </div>
+      <div class="frow">
+        <div class="field">
+          <label>Title Status</label>
+          <select id="f-status">
+            <option value="clear">Clear</option>
+            <option value="pending">Pending Verification</option>
+            <option value="lien">Lien Placed</option>
+            <option value="dispute">Under Dispute</option>
+          </select>
+        </div>
+        <div class="field"><label>Previous Owner</label><input type="text" id="f-prevowner" placeholder="Optional — for chain tracking"/></div>
+      </div>
+      <div class="frow one">
+        <div class="field"><label>Notes</label><textarea id="f-notes" placeholder="Any additional remarks, deed references, etc."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green" onclick="saveRecord()" id="saveBtn">✓ Register Property</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== DATA STORE ===== */
+let properties = [
+  {id:'US-TX-0041',survey:'Block 3, Lot 7',addr:'1420 Elm Street, Austin, TX',owner:'Margaret Sullivan',ownerid:'SSN-XXX-4421',size:2.5,unit:'acres',type:'Residential',price:485000,date:'2024-03-12',status:'clear',prevowner:'Thomas Greaves',notes:'Corner plot. Survey completed 2023.',history:[{owner:'County of Travis',price:0,year:1962},{owner:'Thomas Greaves',price:52000,year:1989},{owner:'Margaret Sullivan',price:485000,year:2024}]},
+  {id:'US-TX-0112',survey:'Sec 14, Survey 88',addr:'750 Ranch Road, Dripping Springs, TX',owner:'Lone Star Farms LLC',ownerid:'EIN-82-4471',size:45.2,unit:'acres',type:'Agricultural',price:1250000,date:'2025-01-05',status:'lien',prevowner:'Carl Richter',notes:'Bank lien placed by First National. Agricultural operation active.',history:[{owner:'State of Texas',price:0,year:1945},{owner:'Carl Richter',price:180000,year:2001},{owner:'Lone Star Farms LLC',price:1250000,year:2025}]},
+  {id:'US-TX-0287',survey:'Plat 22-B',addr:'3300 Pecos St, San Antonio, TX',owner:'Nexus Properties Inc.',ownerid:'EIN-91-3342',size:0.75,unit:'acres',type:'Commercial',price:3400000,date:'2024-11-22',status:'clear',prevowner:'City of San Antonio',notes:'Former municipal lot. Zoned commercial B2.',history:[{owner:'City of San Antonio',price:0,year:1980},{owner:'Nexus Properties Inc.',price:3400000,year:2024}]},
+  {id:'US-TX-0398',survey:'Lot 44, Blk 2',addr:'892 Lavaca Blvd, Houston, TX',owner:'Diana Okonkwo',ownerid:'SSN-XXX-8834',size:0.3,unit:'acres',type:'Residential',price:320000,date:'2026-05-20',status:'pending',prevowner:'James Ford',notes:'Pending sub-registrar stamp. Deed filed 20 May 2026.',history:[{owner:'James Ford',price:185000,year:2015},{owner:'Diana Okonkwo',price:320000,year:2026}]},
+  {id:'US-TX-0504',survey:'Survey 61, Abs 7',addr:'18 Hilltop Drive, Waco, TX',owner:'Robert Vasquez',ownerid:'SSN-XXX-2291',size:5.8,unit:'acres',type:'Mixed-use',price:760000,date:'2025-02-14',status:'dispute',prevowner:'Helen Vasquez',notes:'Ownership dispute filed — civil court case CV-2026-0441.',history:[{owner:'Estate of E. Vasquez',price:0,year:1998},{owner:'Helen Vasquez',price:210000,year:2010},{owner:'Robert Vasquez',price:760000,year:2025}]},
+  {id:'US-TX-0619',survey:'N/A',addr:'5500 Greenwood Ave, Dallas, TX',owner:'GreenAcres Holdings',ownerid:'EIN-44-8821',size:12.0,unit:'acres',type:'Agricultural',price:980000,date:'2026-04-08',status:'clear',prevowner:'Prairie Land Trust',notes:'Conservation easement in place for north 4 acres.',history:[{owner:'Prairie Land Trust',price:420000,year:2012},{owner:'GreenAcres Holdings',price:980000,year:2026}]},
+  {id:'US-TX-0723',survey:'Lot 9, Blk A',addr:'210 Cedar St, Amarillo, TX',owner:'Samuel Adeyemi',ownerid:'SSN-XXX-6671',size:0.5,unit:'acres',type:'Residential',price:195000,date:'2024-10-30',status:'lien',prevowner:'Clara Norris',notes:'Lien by Wells Fargo Mortgage. Renewal due in 14 days.',history:[{owner:'Clara Norris',price:90000,year:2005},{owner:'Samuel Adeyemi',price:195000,year:2024}]},
+  {id:'US-TX-0831',survey:'Block 11, Lot 3',addr:'87 Mesquite Rd, Lubbock, TX',owner:'Patricia Chambers',ownerid:'SSN-XXX-5512',size:1.2,unit:'acres',type:'Residential',price:275000,date:'2024-12-17',status:'clear',prevowner:'Martin Yee',notes:'All encumbrances cleared Dec 2024.',history:[{owner:'Martin Yee',price:140000,year:2009},{owner:'Patricia Chambers',price:275000,year:2024}]},
+  {id:'US-TX-0944',survey:'Survey 12, Abs 4',addr:'9000 Industrial Pkwy, El Paso, TX',owner:'TexBuild Corp',ownerid:'EIN-55-1122',size:8.4,unit:'acres',type:'Industrial',price:1650000,date:'2025-07-11',status:'clear',prevowner:'EP Industrial Fund',notes:'Zoned heavy industrial. Environmental clearance 2025.',history:[{owner:'EP Industrial Fund',price:900000,year:2018},{owner:'TexBuild Corp',price:1650000,year:2025}]},
+  {id:'US-TX-1005',survey:'Plat 8C',addr:'2200 Bluebell Lane, Corpus Christi, TX',owner:'Anna & Luis Reyes',ownerid:'SSN-XXX-3345',size:0.25,unit:'acres',type:'Residential',price:215000,date:'2025-09-03',status:'pending',prevowner:'Lighthouse Realty',notes:'Final deed pending county recorder.',history:[{owner:'Lighthouse Realty',price:130000,year:2020},{owner:'Anna & Luis Reyes',price:215000,year:2025}]},
+];
+
+let activityLog = [
+  {dot:'d-sale',text:'US-TX-0112 sold for $1,250,000',meta:'Carl Richter → Lone Star Farms LLC · 2 hrs ago'},
+  {dot:'d-transfer',text:'US-TX-0041 title transferred & deed registered',meta:'Travis County Sub-Registrar · 4 hrs ago'},
+  {dot:'d-lien',text:'Lien placed on US-TX-0723',meta:'Wells Fargo Mortgage · 30-yr mortgage · 6 hrs ago'},
+  {dot:'d-dispute',text:'Ownership dispute filed — US-TX-0504',meta:'Civil court ref. CV-2026-0441 · 1 day ago'},
+  {dot:'d-sale',text:'US-TX-0619 sold for $980,000',meta:'Prairie Land Trust → GreenAcres Holdings · 1 day ago'},
+  {dot:'d-transfer',text:'US-TX-0831 all encumbrances cleared',meta:'All liens discharged · 2 days ago'},
+];
+
+/* ===== STATE ===== */
+let currentFilter = 'all';
+let currentSizeFilter = '';
+let currentPage = 1;
+const PER_PAGE = 7;
+let filteredData = [...properties];
+let editId = null;
+
+/* ===== FORMAT HELPERS ===== */
+function fmtPrice(n){
+  if(n>=1000000) return '$'+(n/1000000).toFixed(2)+'M';
+  if(n>=1000) return '$'+(n/1000).toFixed(0)+'K';
+  return '$'+n.toLocaleString();
+}
+function fmtSize(s,u){return s+' '+u}
+function fmtDate(d){if(!d)return '—';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'})}
+const statusClass={clear:'badge-clear',lien:'badge-lien',dispute:'badge-dispute',pending:'badge-pending'};
+const statusLabel={clear:'Clear Title',lien:'Lien',dispute:'Dispute',pending:'Pending'};
+
+/* ===== METRICS ===== */
+function renderMetrics(){
+  const total=properties.length;
+  const totalVal=properties.reduce((s,p)=>s+p.price,0);
+  const totalAcres=properties.filter(p=>p.unit==='acres').reduce((s,p)=>s+p.size,0);
+  const disputes=properties.filter(p=>p.status==='dispute').length;
+  const liens=properties.filter(p=>p.status==='lien').length;
+  document.getElementById('metricsRow').innerHTML=`
+    <div class="metric"><div class="metric-icon ic-green">📋</div><div class="metric-val">${total}</div><div class="metric-lbl">Total Parcels</div><div class="metric-delta delta-up">↑ Active records</div></div>
+    <div class="metric"><div class="metric-icon ic-amber">💵</div><div class="metric-val">${fmtPrice(totalVal)}</div><div class="metric-lbl">Total Portfolio Value</div><div class="metric-delta delta-up">↑ USD</div></div>
+    <div class="metric"><div class="metric-icon ic-blue">🌾</div><div class="metric-val">${totalAcres.toFixed(1)}</div><div class="metric-lbl">Acres on Record</div><div class="metric-delta delta-neu">→ Tracked parcels</div></div>
+    <div class="metric"><div class="metric-icon ic-red">⚖️</div><div class="metric-val">${disputes}</div><div class="metric-lbl">Open Disputes</div><div class="metric-delta ${disputes>0?'delta-dn':'delta-up'}">${disputes>0?'↑ Needs attention':'✓ None active'}</div></div>
+    <div class="metric"><div class="metric-icon ic-amber">🔗</div><div class="metric-val">${liens}</div><div class="metric-lbl">Active Liens</div><div class="metric-delta ${liens>0?'delta-dn':'delta-up'}">${liens>0?'↑ Monitor closely':'✓ Clear'}</div></div>
+  `;
+  document.getElementById('sb-total').textContent=total;
+  document.getElementById('sb-acres').textContent=totalAcres.toFixed(0);
+  document.getElementById('sb-disputes').textContent=disputes;
+  document.getElementById('sb-liens').textContent=liens;
+  document.getElementById('alertCount').textContent=(disputes+liens)+' urgent';
+}
+
+/* ===== TABLE ===== */
+function applyFilters(){
+  currentSizeFilter=document.getElementById('sizeFilter').value;
+  filteredData=properties.filter(p=>{
+    const statusOk=currentFilter==='all'||p.status===currentFilter;
+    let sizeOk=true;
+    if(currentSizeFilter==='small') sizeOk=p.unit==='acres'&&p.size<1;
+    else if(currentSizeFilter==='medium') sizeOk=p.unit==='acres'&&p.size>=1&&p.size<5;
+    else if(currentSizeFilter==='large') sizeOk=p.unit==='acres'&&p.size>=5&&p.size<20;
+    else if(currentSizeFilter==='xlarge') sizeOk=p.unit==='acres'&&p.size>=20;
+    return statusOk&&sizeOk;
+  });
+  currentPage=1;
+  renderTable();
+}
+
+function filterTable(status,btn){
+  currentFilter=status;
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function renderTable(highlight=''){
+  const start=(currentPage-1)*PER_PAGE;
+  const pageData=filteredData.slice(start,start+PER_PAGE);
+  const totalPages=Math.ceil(filteredData.length/PER_PAGE);
+  function hl(str){
+    if(!highlight) return str;
+    const re=new RegExp('('+highlight.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    return String(str).replace(re,'<span class="hl">$1</span>');
+  }
+  document.getElementById('mainTableBody').innerHTML=pageData.map(p=>`
+    <tr onclick="openDetail('${p.id}')">
+      <td><span class="mono">${hl(p.id)}</span></td>
+      <td>${hl(p.addr)}</td>
+      <td><span class="fw">${hl(p.owner)}</span></td>
+      <td><span class="size-pill">📐 ${fmtSize(p.size,p.unit)}</span></td>
+      <td style="color:var(--clay);font-size:12px">${p.type}</td>
+      <td><span class="badge ${statusClass[p.status]}">${statusLabel[p.status]}</span></td>
+      <td><span class="price">${fmtPrice(p.price)}</span></td>
+      <td style="color:var(--sand);font-size:12px">${fmtDate(p.date)}</td>
+      <td><button class="btn btn-sm" onclick="event.stopPropagation();openEdit('${p.id}')">Edit</button></td>
+    </tr>
+  `).join('');
+  document.getElementById('tableInfo').textContent=`Showing ${Math.min(start+1,filteredData.length)}–${Math.min(start+PER_PAGE,filteredData.length)} of ${filteredData.length} records`;
+  document.getElementById('pageInfo').textContent=`Page ${currentPage} / ${Math.max(totalPages,1)}`;
+  document.getElementById('prevBtn').disabled=currentPage===1;
+  document.getElementById('nextBtn').disabled=currentPage>=totalPages;
+}
+function prevPage(){if(currentPage>1){currentPage--;renderTable();}}
+function nextPage(){const tp=Math.ceil(filteredData.length/PER_PAGE);if(currentPage<tp){currentPage++;renderTable();}}
+
+/* ===== LIVE SEARCH ===== */
+function liveSearch(q){
+  q=q.toLowerCase().trim();
+  if(!q){filteredData=[...properties];currentPage=1;renderTable();return;}
+  filteredData=properties.filter(p=>
+    p.id.toLowerCase().includes(q)||
+    p.addr.toLowerCase().includes(q)||
+    p.owner.toLowerCase().includes(q)||
+    p.type.toLowerCase().includes(q)
+  );
+  currentPage=1;
+  renderTable(q);
+}
+
+/* ===== ACTIVITY ===== */
+function renderActivity(){
+  document.getElementById('activityList').innerHTML=activityLog.slice(0,6).map(a=>`
+    <div class="act-item"><div class="act-dot ${a.dot}"></div>
+    <div><div class="act-main">${a.text}</div><div class="act-meta">${a.meta}</div></div></div>
+  `).join('');
+}
+
+/* ===== ALERTS ===== */
+function renderAlerts(){
+  const alerts=[];
+  properties.forEach(p=>{
+    if(p.status==='dispute') alerts.push({type:'danger',icon:'⚠️',title:`Dispute — ${p.id}`,body:p.notes});
+    if(p.status==='lien') alerts.push({type:'warn',icon:'🔗',title:`Lien Active — ${p.id}`,body:p.notes});
+    if(p.status==='pending') alerts.push({type:'info',icon:'⏳',title:`Pending — ${p.id}`,body:p.notes});
+  });
+  document.getElementById('alertsList').innerHTML=alerts.slice(0,5).map(a=>`
+    <div class="alert alert-${a.type}"><span class="alert-icon">${a.icon}</span>
+    <div><div class="alert-t">${a.title}</div><div>${a.body}</div></div></div>
+  `).join('');
+  document.getElementById('alertCount').textContent=`${alerts.length} urgent`;
+}
+
+/* ===== CHAIN ===== */
+function buildChainSelect(){
+  const sel=document.getElementById('chainSelect');
+  sel.innerHTML=properties.map(p=>`<option value="${p.id}">${p.id} · ${p.owner.split(' ').slice(0,2).join(' ')}</option>`).join('');
+  renderChain(properties[0].id);
+}
+function renderChain(pid){
+  const p=properties.find(x=>x.id===pid);
+  if(!p){return;}
+  const colors=['#e8eef8|#0d3166','#e1f5ee|#085041','#faeeda|#6b3e0a','#eaf3de|#3b6d11','#fce8e8|#7a1e1e'];
+  document.getElementById('ownershipChain').innerHTML=p.history.map((h,i)=>{
+    const[bg,tc]=colors[i%colors.length].split('|');
+    const isCurrent=i===p.history.length-1;
+    const initials=h.owner.split(' ').map(x=>x[0]).slice(0,2).join('');
+    return `<div class="chain-item">
+      <div class="chain-av" style="background:${bg};color:${tc}">${initials}</div>
+      <div style="flex:1"><div class="chain-name">${h.owner}</div><div class="chain-sub">${h.year}${isCurrent?' – present':' – '+(p.history[i+1]?.year||'?')}</div></div>
+      <div style="text-align:right"><div class="chain-price">${h.price?fmtPrice(h.price):'Land Grant'}</div>${isCurrent?'<div class="chain-now">Current owner</div>':''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ===== TOP SALES ===== */
+function renderTopSales(){
+  const sorted=[...properties].sort((a,b)=>b.price-a.price).slice(0,5);
+  document.getElementById('topSalesBody').innerHTML=sorted.map((p,i)=>`
+    <tr onclick="openDetail('${p.id}')" style="cursor:pointer">
+      <td style="color:var(--sand);font-weight:700">#${i+1}</td>
+      <td><span class="mono">${p.id}</span></td>
+      <td style="font-weight:500">${p.owner.split(' ').slice(0,2).join(' ')}</td>
+      <td><span class="size-pill">${fmtSize(p.size,p.unit)}</span></td>
+      <td><span class="price">${fmtPrice(p.price)}</span></td>
+    </tr>
+  `).join('');
+}
+
+/* ===== DETAIL PANEL ===== */
+function openDetail(pid){
+  const p=properties.find(x=>x.id===pid);
+  if(!p) return;
+  document.getElementById('dpTitle').textContent=p.id;
+  document.getElementById('dpSub').textContent=p.addr;
+  document.getElementById('dpBody').innerHTML=`
+    <div class="dp-section">
+      <div class="dp-section-title">Property Details</div>
+      <div class="dp-row"><span class="dp-key">Survey / Lot</span><span class="dp-val">${p.survey||'—'}</span></div>
+      <div class="dp-row"><span class="dp-key">Land Size</span><span class="dp-val">${fmtSize(p.size,p.unit)}</span></div>
+      <div class="dp-row"><span class="dp-key">Land Type</span><span class="dp-val">${p.type}</span></div>
+      <div class="dp-row"><span class="dp-key">Title Status</span><span class="dp-val"><span class="badge ${statusClass[p.status]}">${statusLabel[p.status]}</span></span></div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-title">Sale Information</div>
+      <div class="dp-row"><span class="dp-key">Current Owner</span><span class="dp-val">${p.owner}</span></div>
+      <div class="dp-row"><span class="dp-key">Previous Owner</span><span class="dp-val">${p.prevowner||'—'}</span></div>
+      <div class="dp-row"><span class="dp-key">Last Sale Price</span><span class="dp-val" style="font-family:'Playfair Display',serif;font-size:15px">${fmtPrice(p.price)}</span></div>
+      <div class="dp-row"><span class="dp-key">Sale Date</span><span class="dp-val">${fmtDate(p.date)}</span></div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-title">Ownership History</div>
+      <div class="dp-chain-mini">${p.history.map((h,i)=>`
+        <div class="dc-item"><div class="dc-dot"></div>
+        <div class="dc-name">${h.owner}</div>
+        <div class="dc-dates">${h.year} · ${h.price?fmtPrice(h.price):'Grant'}</div></div>
+      `).join('')}</div>
+    </div>
+    ${p.notes?`<div class="dp-section"><div class="dp-section-title">Notes</div><div style="font-size:13px;color:var(--clay);line-height:1.6">${p.notes}</div></div>`:''}
+    <div style="margin-top:1rem;display:flex;gap:8px">
+      <button class="btn btn-green" onclick="openEdit('${p.id}');closeDetail()">Edit Record</button>
+      <button class="btn" onclick="if(confirm('Delete this record?')){deleteRecord('${p.id}');closeDetail()}">Delete</button>
+    </div>
+  `;
+  document.getElementById('detailPanel').classList.add('open');
+}
+function closeDetail(){document.getElementById('detailPanel').classList.remove('open')}
+
+/* ===== MODAL ===== */
+function openAddModal(){
+  editId=null;
+  document.getElementById('modalTitle').textContent='Register New Property';
+  document.getElementById('saveBtn').textContent='✓ Register Property';
+  ['f-id','f-survey','f-addr','f-owner','f-ownerid','f-size','f-notes','f-prevowner'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-unit').value='acres';
+  document.getElementById('f-type').value='Residential';
+  document.getElementById('f-price').value='';
+  document.getElementById('f-date').value='';
+  document.getElementById('f-status').value='clear';
+  document.getElementById('addModal').classList.add('open');
+}
+function openEdit(pid){
+  const p=properties.find(x=>x.id===pid);
+  if(!p)return;
+  editId=pid;
+  document.getElementById('modalTitle').textContent='Edit Property Record';
+  document.getElementById('saveBtn').textContent='✓ Save Changes';
+  document.getElementById('f-id').value=p.id;
+  document.getElementById('f-survey').value=p.survey||'';
+  document.getElementById('f-addr').value=p.addr;
+  document.getElementById('f-owner').value=p.owner;
+  document.getElementById('f-ownerid').value=p.ownerid||'';
+  document.getElementById('f-size').value=p.size;
+  document.getElementById('f-unit').value=p.unit;
+  document.getElementById('f-type').value=p.type;
+  document.getElementById('f-price').value=p.price;
+  document.getElementById('f-date').value=p.date||'';
+  document.getElementById('f-status').value=p.status;
+  document.getElementById('f-prevowner').value=p.prevowner||'';
+  document.getElementById('f-notes').value=p.notes||'';
+  document.getElementById('addModal').classList.add('open');
+}
+function closeModal(){document.getElementById('addModal').classList.remove('open')}
+
+function saveRecord(){
+  const id=document.getElementById('f-id').value.trim();
+  const addr=document.getElementById('f-addr').value.trim();
+  const owner=document.getElementById('f-owner').value.trim();
+  const size=parseFloat(document.getElementById('f-size').value);
+  const price=parseFloat(document.getElementById('f-price').value);
+  if(!id||!addr||!owner||isNaN(size)||isNaN(price)){alert('Please fill in all required fields (*).');return;}
+  const rec={
+    id,survey:document.getElementById('f-survey').value.trim(),
+    addr,owner,ownerid:document.getElementById('f-ownerid').value.trim(),
+    size,unit:document.getElementById('f-unit').value,
+    type:document.getElementById('f-type').value,
+    price,date:document.getElementById('f-date').value,
+    status:document.getElementById('f-status').value,
+    prevowner:document.getElementById('f-prevowner').value.trim(),
+    notes:document.getElementById('f-notes').value.trim(),
+    history:[]
+  };
+  if(editId){
+    const idx=properties.findIndex(p=>p.id===editId);
+    if(idx>=0){rec.history=properties[idx].history;properties[idx]=rec;}
+    activityLog.unshift({dot:'d-transfer',text:`${id} record updated`,meta:`${owner} · just now`});
+  } else {
+    if(properties.find(p=>p.id===id)){alert('A record with this Parcel ID already exists.');return;}
+    const prev=document.getElementById('f-prevowner').value.trim();
+    rec.history=prev?[{owner:prev,price:0,year:'—'},{owner,price,year:new Date(rec.date||Date.now()).getFullYear()}]:[{owner,price,year:new Date(rec.date||Date.now()).getFullYear()}];
+    properties.unshift(rec);
+    activityLog.unshift({dot:'d-sale',text:`${id} registered — ${fmtPrice(price)}`,meta:`${owner} · just now`});
+  }
+  closeModal();
+  refreshAll();
+}
+
+function deleteRecord(pid){
+  properties=properties.filter(p=>p.id!==pid);
+  activityLog.unshift({dot:'d-transfer',text:`${pid} removed from registry`,meta:'Just now'});
+  refreshAll();
+}
+
+/* ===== EXPORT ===== */
+function exportCSV(){
+  const rows=[['Parcel ID','Address','Owner','Size','Unit','Type','Status','Sale Price (USD)','Sale Date','Notes']];
+  filteredData.forEach(p=>rows.push([p.id,p.addr,p.owner,p.size,p.unit,p.type,statusLabel[p.status],'$'+p.price,fmtDate(p.date),p.notes]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='landtrack-registry.csv';
+  a.click();
+}
+
+/* ===== CLOSE ON OVERLAY ===== */
+document.getElementById('addModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+/* ===== REFRESH ALL ===== */
+function refreshAll(){
+  filteredData=[...properties];
+  currentPage=1;
+  renderMetrics();
+  renderTable();
+  renderActivity();
+  renderAlerts();
+  buildChainSelect();
+  renderTopSales();
+}
+
+/* ===== INIT ===== */
+refreshAll();
+</script>
+</body>
+</html>
